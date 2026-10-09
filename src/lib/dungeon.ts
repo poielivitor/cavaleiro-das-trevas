@@ -8,9 +8,10 @@ export function createMaze(size = 25) {
   let seed = 91243;
   const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const start = { x: 1, z: 1 };
-  grid[1][1] = 0;
+  const startRow = grid[1];
+  if (startRow) startRow[1] = 0;
   const stack = [start];
-  const directions = [[0, 2], [2, 0], [0, -2], [-2, 0]];
+  const directions: [number, number][] = [[0, 2], [2, 0], [0, -2], [-2, 0]];
   while (stack.length) {
     const current = stack[stack.length - 1];
     if (!current) break;
@@ -21,8 +22,9 @@ export function createMaze(size = 25) {
     const direction = candidates[Math.floor(random() * candidates.length)];
     if (!direction) { stack.pop(); continue; }
     const [dx, dz] = direction;
-    grid[current.z + dz / 2][current.x + dx / 2] = 0;
-    grid[current.z + dz][current.x + dx] = 0;
+    const middleRow = grid[current.z + dz / 2], endRow = grid[current.z + dz];
+    if (middleRow) middleRow[current.x + dx / 2] = 0;
+    if (endRow) endRow[current.x + dx] = 0;
     stack.push({ x: current.x + dx, z: current.z + dz });
   }
   const queue: Cell[] = [start];
@@ -30,7 +32,8 @@ export function createMaze(size = 25) {
   const distance = new Map<string, number>([['1,1', 0]]);
   for (let i = 0; i < queue.length; i++) {
     const current = queue[i];
-    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    if (!current) continue;
+    for (const [dx, dz] of ([[1, 0], [-1, 0], [0, 1], [0, -1]] as [number, number][])) {
       const next = { x: current.x + dx, z: current.z + dz }, key = `${next.x},${next.z}`;
       if (grid[next.z]?.[next.x] !== 0 || distance.has(key)) continue;
       parents.set(key, current);
@@ -48,7 +51,7 @@ export function createMaze(size = 25) {
   for (const cell of queue) {
     if ((cell.x + cell.z * 3) % 7 !== 0 && !(cell.x === 1 && cell.z === 2)) continue;
     if (Math.hypot(cell.x - end.x, cell.z - end.z) < 2) continue;
-    const wall = [[-1, 0], [1, 0], [0, -1], [0, 1]].find(([dx, dz]) => grid[cell.z + dz]?.[cell.x + dx] === 1);
+    const wall = ([[-1, 0], [1, 0], [0, -1], [0, 1]] as [number, number][]).find(([dx, dz]) => grid[cell.z + dz]?.[cell.x + dx] === 1);
     if (!wall) continue;
     const [dx, dz] = wall;
     torches.push({ x: (cell.x + 0.5 + dx * 0.46) * CELL, z: (cell.z + 0.5 + dz * 0.46) * CELL,

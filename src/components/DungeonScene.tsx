@@ -47,7 +47,7 @@ function FixedProps() {
       <planeGeometry args={[0.32, 0.96]} />
       <meshBasicMaterial map={maps.torch} transparent alphaTest={0.3} side={THREE.DoubleSide} />
     </mesh>)}
-    {[[-0.68, -0.4, 0.3], [0.63, 0.32, -0.7], [-0.2, 0.83, 1.9]].map(([dx, dz, rotation], i) =>
+    {([[-0.68, -0.4, 0.3], [0.63, 0.32, -0.7], [-0.2, 0.83, 1.9]] as [number, number, number][]).map(([dx, dz, rotation], i) =>
       <mesh key={i} name={`fallen-warrior-${i}`} position={[(end.x + 0.5) * CELL + dx, 0.02 + i * 0.001, (end.z + 0.5) * CELL + dz]} rotation={[-Math.PI / 2, 0, rotation]}>
         <planeGeometry args={[1.0, 1.25]} />
         <meshBasicMaterial map={maps.skeleton} transparent alphaTest={0.3} color={SCENE_COLORS.bone} />
@@ -81,8 +81,8 @@ function Player({ state, onUpdate }: Props) {
     tick.current += dt;
     if (tick.current > 0.1) {
       tick.current = 0;
-      gl.domElement.dataset.position = `${s.x.toFixed(3)},${s.z.toFixed(3)}`;
-      gl.domElement.dataset.yaw = s.yaw.toFixed(3);
+      gl.domElement.dataset['position'] = `${s.x.toFixed(3)},${s.z.toFixed(3)}`;
+      gl.domElement.dataset['yaw'] = s.yaw.toFixed(3);
       onUpdate();
     }
   });

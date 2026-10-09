@@ -61,14 +61,16 @@ type Point = [number, number, number];
 export function buildSurfaces() {
   const wallPos: number[] = [], wallUv: number[] = [], wallColors: number[] = [];
   const floorPos: number[] = [], floorUv: number[] = [], floorColors: number[] = [];
-  function quad(corners: Point[], sampleOffset: Point, floor = false, dark = false) {
+  function quad(corners: [Point, Point, Point, Point], sampleOffset: Point, floor = false, dark = false) {
     const positions = floor ? floorPos : wallPos, uvs = floor ? floorUv : wallUv, colors = floor ? floorColors : wallColors;
     const steps = 2;
     const a = new THREE.Vector3(...corners[0]), b = new THREE.Vector3(...corners[1]), d = new THREE.Vector3(...corners[3]);
     for (let iz = 0; iz < steps; iz++) for (let ix = 0; ix < steps; ix++) {
-      const coords = [[ix, iz], [ix + 1, iz], [ix + 1, iz + 1], [ix, iz + 1]];
+      const coords: [number, number][] = [[ix, iz], [ix + 1, iz], [ix + 1, iz + 1], [ix, iz + 1]];
       for (const idx of [0, 1, 2, 0, 2, 3]) {
-        const [u, v] = coords[idx];
+        const coordinate = coords[idx];
+        if (!coordinate) continue;
+        const [u, v] = coordinate;
         const p = a.clone().addScaledVector(b.clone().sub(a), u / steps).addScaledVector(d.clone().sub(a), v / steps);
         positions.push(p.x, p.y, p.z); uvs.push(u / steps, v / steps);
         const sx = p.x + sampleOffset[0], sz = p.z + sampleOffset[2];
@@ -79,15 +81,15 @@ export function buildSurfaces() {
     }
   }
   for (let z = 1; z < MAZE.size - 1; z++) for (let x = 1; x < MAZE.size - 1; x++) {
-    if (MAZE.grid[z][x] !== 0) continue;
+    if (MAZE.grid[z]?.[x] !== 0) continue;
     const x0 = x * CELL, x1 = (x + 1) * CELL, z0 = z * CELL, z1 = (z + 1) * CELL;
     quad([[x0, 0, z1], [x1, 0, z1], [x1, 0, z0], [x0, 0, z0]], [0.015, 0, 0.015], true);
     quad([[x0, HEIGHT, z0], [x1, HEIGHT, z0], [x1, HEIGHT, z1], [x0, HEIGHT, z1]], [0.015, 0, 0.015]);
     const final = x === MAZE.end.x && z === MAZE.end.z;
-    if (MAZE.grid[z - 1][x] === 1) quad([[x0, 0, z0], [x1, 0, z0], [x1, HEIGHT, z0], [x0, HEIGHT, z0]], [0.01, 0, 0.025], false, final);
-    if (MAZE.grid[z + 1][x] === 1) quad([[x1, 0, z1], [x0, 0, z1], [x0, HEIGHT, z1], [x1, HEIGHT, z1]], [-0.01, 0, -0.025], false, final);
-    if (MAZE.grid[z][x - 1] === 1) quad([[x0, 0, z1], [x0, 0, z0], [x0, HEIGHT, z0], [x0, HEIGHT, z1]], [0.025, 0, -0.01], false, final);
-    if (MAZE.grid[z][x + 1] === 1) quad([[x1, 0, z0], [x1, 0, z1], [x1, HEIGHT, z1], [x1, HEIGHT, z0]], [-0.025, 0, 0.01], false, final);
+    if (MAZE.grid[z - 1]?.[x] === 1) quad([[x0, 0, z0], [x1, 0, z0], [x1, HEIGHT, z0], [x0, HEIGHT, z0]], [0.01, 0, 0.025], false, final);
+    if (MAZE.grid[z + 1]?.[x] === 1) quad([[x1, 0, z1], [x0, 0, z1], [x0, HEIGHT, z1], [x1, HEIGHT, z1]], [-0.01, 0, -0.025], false, final);
+    if (MAZE.grid[z]?.[x - 1] === 1) quad([[x0, 0, z1], [x0, 0, z0], [x0, HEIGHT, z0], [x0, HEIGHT, z1]], [0.025, 0, -0.01], false, final);
+    if (MAZE.grid[z]?.[x + 1] === 1) quad([[x1, 0, z0], [x1, 0, z1], [x1, HEIGHT, z1], [x1, HEIGHT, z0]], [-0.025, 0, 0.01], false, final);
   }
   function geometry(pos: number[], uv: number[], color: number[]) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
