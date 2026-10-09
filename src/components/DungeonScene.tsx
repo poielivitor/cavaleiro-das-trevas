@@ -130,7 +130,7 @@ function PixelPass() {
     const material = new THREE.ShaderMaterial({ uniforms: { image: { value: target.texture } }, depthTest: false, depthWrite: false,
       vertexShader: 'varying vec2 uvOut; void main(){uvOut=uv;gl_Position=vec4(position.xy,0.,1.);}',
       fragmentShader: `uniform sampler2D image; varying vec2 uvOut;
-      void main(){vec3 c=texture2D(image,uvOut).rgb;float d=mod(floor(gl_FragCoord.x)+floor(gl_FragCoord.y),2.)*.014; c=floor((c+d)*40.)/40.; gl_FragColor=vec4(c,1.);}` });
+      void main(){vec3 c=texture2D(image,uvOut).rgb;float d=mod(floor(gl_FragCoord.x)+floor(gl_FragCoord.y),2.)*.014; c=floor((c+d)*40.)/40.; gl_FragColor=vec4(pow(max(c,vec3(0.)),vec3(1./2.2)),1.);}` });
     const scene = new THREE.Scene(), geometry = new THREE.PlaneGeometry(2, 2);
     scene.add(new THREE.Mesh(geometry, material));
     return { target, material, scene, geometry, camera: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1) };
